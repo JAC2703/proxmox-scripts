@@ -1,0 +1,3 @@
+#!/bin/bash
+
+vzlist --all --output ctid,hostname,diskspace,diskspace.s,diskspace.h --sort diskspace | awk '{if (NR>1) {printf("%-4s %-30s %-10s %-10s %-10s %d\n", $1, $2, $3, $4, $5, $3/$4*100)} else printf("%-4s %-30s %-10s %-10s %-10s %s\n", $1, $2, $3, $4, $5, "PERC_USED")}'

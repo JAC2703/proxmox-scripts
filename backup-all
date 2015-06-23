@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# Filename : backup_all
+# Description : Backup all OpenVZ containers in Proxmox
+# Author : James Coyle
+#
+# Version:
+# -Date       -Author      -Description
+# 20-11-2013  James Coyle  Initial
+#
+#
+ 
+BACKUP_PATH=/var/lib/vz/dump
+COMPRESS="lzo"
+ 
+# Check dir exists
+if [ ! -d $BACKUP_PATH ]; then
+  echo "The directory $BACKUP_PATH does not exist."
+  exit 99
+fi
+ 
+IFS=$'\n'
+VMARRAY=($(vzlist -a -H))
+VMIDS=""
+ 
+for V in ${VMARRAY[@]}
+do
+  VMIDS="$VMIDS ${V:7:3}"
+done
+ 
+if [ -n $VMIDS ]; then
+  vzdump $VMIDS --dumpdir $BACKUP_PATH --mode snapshot --compress $COMPRESS --remove 0
+fi
+ 
+echo "Backup of VMID(s) $VMIDS complete."

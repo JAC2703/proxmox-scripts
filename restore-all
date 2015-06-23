@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Filename : restore_all
+# Description : Restores all missing OpenVZ containers in Proxmox to the latest version available in the dump folder.
+# Author : James Coyle
+#
+# Version:
+# -Date       -Author      -Description
+# 01-11-2013  James Coyle  Initial
+#
+#
+
+BACKUP_PATH=/var/lib/vz/dump
+BACKUP_EXT=tar.lzo
+
+# Do not change
+SEARCH_PATH=$BACKUP_PATH/vzdump-openvz-*.$BACKUP_EXT
+
+# Check dir exists
+if [ ! -d $BACKUP_PATH ]; then
+  echo "The directory $BACKUP_PATH does not exist"
+  exit 99
+fi
+
+# Get unique VMIDs
+for F in $SEARCH_PATH
+do
+  FILENAME=${F##*/}
+  FILE_DATE=${FILENAME:18:19}
+  FILE_DATE=${FILE_DATE//[_\-]/}
+  VMID=${FILENAME:14:3}
+  if [ -n $FILE_VIMS[$VMID] ]; then
+    FILE_VIMS[$VMID]=$F
+  fi
+
+  TEST_FILENAME=${FILE_VIMS[$VMID]##*/}
+  TEST_FILE_DATE=${TEST_FILENAME:18:19}
+  TEST_FILE_DATE=${TEST_FILE_DATE//[_\-]/}
+  if [ "$FILE_DATE" -gt "$TEST_FILE_DATE" ]; then
+    FILE_VIMS[$VMID]=F
+  fi
+done
+
+# Restore VM
+for I in ${!FILE_VIMS[*]}
+do
+  echo "Restoring $I with ${FILE_VIMS[$I]}..."
+  vzrestore ${FILE_VIMS[$I]} $I
+done
